@@ -40,7 +40,7 @@ def send_message():
         return "メッセージが送信されました！"
     
     except SlackApiError as e:
-        return f"エラーが発��しました: {e.response['error']}"
+        return f"エラーが発生しました: {e.response['error']}"
 
 # Cloud Functions用のエントリーポイント
 @functions_framework.http
