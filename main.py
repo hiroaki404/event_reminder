@@ -3,6 +3,10 @@ from slack_sdk.errors import SlackApiError
 from datetime import datetime, date
 import calendar
 import os
+import functions_framework
+from dotenv import load_dotenv
+load_dotenv()  # .envファイルから環境変数を読み込む
+
 
 # Slack APIトークンを設定
 SLACK_TOKEN = os.environ.get('SLACK_TOKEN')
@@ -21,7 +25,7 @@ def send_message():
     
     message = (
         f"今月のAndroidのイベントは、\n"
-        f"@https://connpass.com/search/?q=Android&start_from={start_date}"
+        f"https://connpass.com/search/?q=Android&start_from={start_date}"
         f"&start_to={end_date}&prefectures=chiba&prefectures=tokyo"
         f"&selectItem=chiba&selectItem=tokyo&sort="
         f"\nです。"
@@ -33,9 +37,16 @@ def send_message():
             text=message
         )
         print("メッセージが送信されました！")
+        return "メッセージが送信されました！"
     
     except SlackApiError as e:
-        print(f"エラーが発生しました: {e.response['error']}")
+        return f"エラーが発��しました: {e.response['error']}"
+
+# Cloud Functions用のエントリーポイント
+@functions_framework.http
+def main(request):
+    result = send_message()
+    return result
 
 if __name__ == "__main__":
     send_message()
