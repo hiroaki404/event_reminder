@@ -20,10 +20,13 @@ USER_AGENT = (
 )
 BOOTSTRAP_MARKER = 'window.REFURB_GRID_BOOTSTRAP ='
 
-# 絞り込み条件: MacBook Air、メモリ32GB、ストレージ512GBまたは1TB（チップ・価格は問わない）
-TARGET_MODEL = 'macbookair'
-TARGET_MEMORY_SIZE = '32gb'
-TARGET_CAPACITIES = {'512gb', '1tb'}
+# 絞り込み条件: 以下のいずれかに一致する商品（チップ・価格は問わない）
+#  1. MacBook Air、メモリ32GB、ストレージ512GBまたは1TB
+#  2. MacBook Pro、メモリ32GB（ストレージは問わない）
+TARGET_RULES = [
+    {'refurbClearModel': 'macbookair', 'tsMemorySize': '32gb', 'dimensionCapacity': {'512gb', '1tb'}},
+    {'refurbClearModel': 'macbookpro', 'tsMemorySize': '32gb'},
+]
 
 
 def fetch_html():
@@ -46,13 +49,20 @@ def extract_tiles(html):
     return data['tiles']
 
 
+def matches_rule(dims, rule):
+    for key, expected in rule.items():
+        actual = dims.get(key)
+        if isinstance(expected, set):
+            if actual not in expected:
+                return False
+        elif actual != expected:
+            return False
+    return True
+
+
 def is_target(tile):
     dims = tile.get('filters', {}).get('dimensions', {})
-    return (
-        dims.get('refurbClearModel') == TARGET_MODEL
-        and dims.get('tsMemorySize') == TARGET_MEMORY_SIZE
-        and dims.get('dimensionCapacity') in TARGET_CAPACITIES
-    )
+    return any(matches_rule(dims, rule) for rule in TARGET_RULES)
 
 
 def find_matching_products():
@@ -70,7 +80,8 @@ def find_matching_products():
 
 
 def build_email_body(matched):
-    lines = ['整備済製品ページにMacBook Air (32GBメモリ / 512GBまたは1TB) が見つかりました。\n']
+    lines = ['整備済製品ページに該当商品が見つかりました。\n'
+             '(MacBook Air 32GB/512GBまたは1TB、またはMacBook Pro 32GB)\n']
     for item in matched:
         lines.append(f"- {item['title']} / {item['price']}\n  {item['url']}")
     return '\n'.join(lines)
@@ -93,7 +104,7 @@ def check_and_notify():
         print('該当商品なし')
         return '該当商品なし'
 
-    subject = f'[整備済Mac] MacBook Air (32GB/512GBまたは1TB) {len(matched)}件見つかりました'
+    subject = f'[整備済Mac] 該当商品が{len(matched)}件見つかりました'
     send_email(subject, build_email_body(matched))
     print(f'{len(matched)}件通知しました')
     return f'{len(matched)}件通知しました'
