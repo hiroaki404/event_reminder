@@ -21,9 +21,14 @@ USER_AGENT = (
 BOOTSTRAP_MARKER = 'window.REFURB_GRID_BOOTSTRAP ='
 
 # 絞り込み条件: 以下のいずれかに一致する商品（チップ・価格は問わない）
-#  1. MacBook Air、メモリ32GB、ストレージ512GBまたは1TB
+#  1. MacBook Air 13インチ、メモリ32GB、ストレージ512GBまたは1TB
 TARGET_RULES = [
-    {'refurbClearModel': 'macbookair', 'tsMemorySize': '32gb', 'dimensionCapacity': {'512gb', '1tb'}},
+    {
+        'refurbClearModel': 'macbookair',
+        'dimensionScreensize': '13inch',
+        'tsMemorySize': '32gb',
+        'dimensionCapacity': {'512gb', '1tb'},
+    },
 ]
 
 
@@ -79,7 +84,7 @@ def find_matching_products():
 
 def build_email_body(matched):
     lines = ['整備済製品ページに該当商品が見つかりました。\n'
-             '(MacBook Air 32GB/512GBまたは1TB)\n']
+             '(13インチMacBook Air 32GB/512GBまたは1TB)\n']
     for item in matched:
         lines.append(f"- {item['title']} / {item['price']}\n  {item['url']}")
     return '\n'.join(lines)
